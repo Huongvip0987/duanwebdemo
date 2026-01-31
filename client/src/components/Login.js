@@ -90,12 +90,6 @@ function Login({ onLogin }) {
                 Đăng ký ngay
               </Link>
             </p>
-
-            <div className="alert alert-info mt-3">
-              <strong>Tài khoản demo:</strong><br />
-              Email: student@university.edu<br />
-              Password: student123
-            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import Register from './components/Register';
 import Courses from './components/Courses';
 import MyCourses from './components/MyCourses';
 import Profile from './components/Profile';
+import Admin from './components/Admin';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -68,6 +69,10 @@ function App() {
           <Route 
             path="/profile" 
             element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/admin" 
+            element={user && user.role === 'admin' ? <Admin /> : <Navigate to="/" />} 
           />
         </Routes>
         <footer className="footer">

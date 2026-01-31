@@ -15,25 +15,44 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
+let dbReady = false;
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => {
+.then(async () => {
   console.log('✅ Connected to MongoDB');
-  initializeData();
+  
+  // Initialize Settings if not exists
+  try {
+    const Settings = require('./models/Settings');
+    const registrationSetting = await Settings.findOne({ key: 'registrationEnabled' });
+    if (!registrationSetting) {
+      await Settings.create({ key: 'registrationEnabled', value: true });
+      console.log('✅ Initialized registration settings');
+    }
+    dbReady = true;
+  } catch (error) {
+    console.warn('⚠️ Settings initialization:', error.message);
+    dbReady = true;
+  }
 })
-.catch(err => console.error('❌ MongoDB connection error:', err));
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  process.exit(1);
+});
 
-// Import routes
+// Import routes (after database connection starts)
 const authRoutes = require('./routes/auth');
 const courseRoutes = require('./routes/courses');
 const userRoutes = require('./routes/users');
+const adminRoutes = require('./routes/admin');
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
@@ -51,11 +70,23 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err);
+  console.error('Error stack:', err.stack);
   res.status(500).json({ 
     message: 'Internal Server Error',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
+});
+
+// Uncaught exception handler
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+  console.error('Stack:', err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
 });
 
 // Initialize sample data
@@ -165,10 +196,41 @@ async function initializeData() {
 }
 
 // Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+try {
+  const PORT = process.env.PORT || 5000;
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+  
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(async () => {
+      try {
+        await mongoose.connection.close();
+      } catch (err) {
+        console.error('Error closing MongoDB:', err);
+      }
+      process.exit(0);
+    });
+  });
+  
+  process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully');
+    server.close(async () => {
+      try {
+        await mongoose.connection.close();
+      } catch (err) {
+        console.error('Error closing MongoDB:', err);
+      }
+      process.exit(0);
+    });
+  });
+  
+} catch (error) {
+  console.error('Fatal error starting server:', error);
+  process.exit(1);
+}
 
 module.exports = app;

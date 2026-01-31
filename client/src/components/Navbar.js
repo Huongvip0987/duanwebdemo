@@ -29,6 +29,16 @@ function Navbar({ user, onLogout }) {
                   Môn Đã Đăng Ký
                 </Link>
               </li>
+              {user.role === 'admin' && (
+                <li>
+                  <Link 
+                    to="/admin" 
+                    className={`navbar-link ${location.pathname === '/admin' ? 'active' : ''}`}
+                  >
+                    ⚙️ Quản Lý
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link 
                   to="/profile" 

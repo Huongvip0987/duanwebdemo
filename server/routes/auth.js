@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Settings = require('../models/Settings');
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -14,6 +15,12 @@ router.post('/register', [
   body('studentId').notEmpty().withMessage('Student ID is required')
 ], async (req, res) => {
   try {
+    // Check if registration is enabled
+    const registrationSetting = await Settings.findOne({ key: 'registrationEnabled' });
+    if (registrationSetting && registrationSetting.value === false) {
+      return res.status(403).json({ message: 'Đăng ký tài khoản hiện đang bị tắt. Vui lòng liên hệ admin.' });
+    }
+    
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

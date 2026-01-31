@@ -20,6 +20,9 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'Token is not valid' });
     }
     
+    // Update lastActive
+    await User.findByIdAndUpdate(user._id, { lastActive: new Date() });
+    
     // Add user to request
     req.user = user;
     next();
