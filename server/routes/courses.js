@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Course = require('../models/Course');
 const User = require('../models/User');
+const Settings = require('../models/Settings');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 
 // @route   GET /api/courses
@@ -43,6 +44,12 @@ router.get('/:id', async (req, res) => {
 // @access  Private
 router.post('/:id/enroll', authMiddleware, async (req, res) => {
   try {
+    const registrationSetting = await Settings.findOne({ key: 'registrationEnabled' });
+    const registrationEnabled = registrationSetting?.value !== false;
+    if (!registrationEnabled) {
+      return res.status(403).json({ message: 'Đăng ký hiện đang bị khóa' });
+    }
+
     const course = await Course.findById(req.params.id);
     const user = await User.findById(req.user._id);
     

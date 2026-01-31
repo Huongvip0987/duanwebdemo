@@ -89,6 +89,12 @@
   margin-bottom: 40px;
 }
 
+.last-updated {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
 .stat-card {
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   color: white;
@@ -218,6 +224,52 @@
   margin-top: 0;
   color: var(--primary-color);
   margin-bottom: 20px;
+}
+
+/* Bar Charts */
+.bar-chart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 120px;
+  gap: 12px;
+  align-items: center;
+}
+
+.bar-label {
+  font-weight: 600;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-track {
+  background: #edf2f7;
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4299e1, #63b3ed);
+}
+
+.bar-value {
+  font-weight: 600;
+  color: var(--text-dark);
+  text-align: right;
+}
+
+.bar-chart-table {
+  margin-top: 20px;
 }
 
 /* Credits Table Section */
@@ -544,6 +596,14 @@ table tr:hover {
   .users-table td {
     padding: 8px;
   }
+
+  .bar-row {
+    grid-template-columns: 120px 1fr 70px;
+  }
+
+  .bar-label {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -610,6 +670,19 @@ table tr:hover {
   .users-table th,
   .users-table td {
     padding: 6px;
+  }
+
+  .bar-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .bar-value {
+    text-align: left;
+  }
+
+  .bar-track {
+    height: 10px;
   }
 
   .users-section h2 {

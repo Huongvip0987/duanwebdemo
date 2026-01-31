@@ -11,6 +11,7 @@ const Admin = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'users', 'courses'
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -21,11 +22,17 @@ const Admin = () => {
     }
 
     fetchData();
+
+    const intervalId = setInterval(() => {
+      fetchData(true);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [navigate]);
 
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
@@ -36,11 +43,14 @@ const Admin = () => {
       setStats(statsRes.data);
       setUsers(usersRes.data);
       setRegistrationEnabled(statsRes.data.registrationEnabled);
-      setLoading(false);
+      setLastUpdated(new Date());
+      if (!silent) setLoading(false);
     } catch (err) {
       console.error('Fetch error:', err);
-      setError(err.response?.data?.message || 'Error loading data');
-      setLoading(false);
+      if (!silent) {
+        setError(err.response?.data?.message || 'Error loading data');
+        setLoading(false);
+      }
     }
   };
 
@@ -68,6 +78,7 @@ const Admin = () => {
       await axios.post('/api/admin/toggle-registration', { enabled: newStatus }, { headers });
       setRegistrationEnabled(newStatus);
       alert(newStatus ? '✅ Đã bật đăng ký' : '🚫 Đã tắt đăng ký');
+      fetchData(true);
     } catch (err) {
       alert(err.response?.data?.message || 'Error toggling registration');
     }
@@ -79,7 +90,14 @@ const Admin = () => {
   return (
     <div className="admin-container">
       <div className="admin-header">
-        <h1>🎓 Admin Dashboard</h1>
+        <div>
+          <h1>🎓 Admin Dashboard</h1>
+          {lastUpdated && (
+            <div className="last-updated">
+              🔄 Cập nhật: {lastUpdated.toLocaleTimeString()}
+            </div>
+          )}
+        </div>
         <button 
           className={`btn-toggle-registration ${registrationEnabled ? 'enabled' : 'disabled'}`}
           onClick={handleToggleRegistration}
@@ -131,68 +149,56 @@ const Admin = () => {
           {stats.courseDistribution && stats.courseDistribution.length > 0 && (
           <div className="chart-section">
             <h2>📊 Phân Bổ Đăng Ký Môn Học</h2>
-            <div className="pie-chart-container">
-              <svg viewBox="0 0 200 200" className="pie-chart">
-                {stats.courseDistribution.map((course, index) => {
-                  let cumulativePercentage = 0;
-                  stats.courseDistribution.slice(0, index).forEach(c => {
-                    cumulativePercentage += parseFloat(c.percentage);
-                  });
-                  
-                  const startAngle = (cumulativePercentage / 100) * 360;
-                  const endAngle = ((cumulativePercentage + parseFloat(course.percentage)) / 100) * 360;
-                  
-                  const startX = 100 + 80 * Math.cos((startAngle - 90) * Math.PI / 180);
-                  const startY = 100 + 80 * Math.sin((startAngle - 90) * Math.PI / 180);
-                  const endX = 100 + 80 * Math.cos((endAngle - 90) * Math.PI / 180);
-                  const endY = 100 + 80 * Math.sin((endAngle - 90) * Math.PI / 180);
-                  
-                  const largeArcFlag = parseFloat(course.percentage) > 50 ? 1 : 0;
-                  
-                  const pathData = [
-                    `M 100 100`,
-                    `L ${startX} ${startY}`,
-                    `A 80 80 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-                    `Z`
-                  ].join(' ');
-                  
-                  const colors = ['#4299e1', '#48bb78', '#ed8936', '#9f7aea', '#f56565'];
-                  
-                  return (
-                    <path
-                      key={course.code}
-                      d={pathData}
-                      fill={colors[index % colors.length]}
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                  );
-                })}
-              </svg>
-              <div className="pie-legend">
-                {stats.courseDistribution.map((course, index) => {
-                  const colors = ['#4299e1', '#48bb78', '#ed8936', '#9f7aea', '#f56565'];
-                  return (
-                    <div key={course.code} className="legend-item">
-                      <span 
-                        className="legend-color" 
-                        style={{backgroundColor: colors[index % colors.length]}}
-                      ></span>
-                      <span className="legend-text">
-                        {course.code}: {course.count} ({course.percentage}%)
-                      </span>
+            <div className="bar-chart-list">
+              {stats.courseDistribution.map((course, index) => {
+                const colors = ['#4299e1', '#48bb78', '#ed8936', '#9f7aea', '#f56565'];
+                return (
+                  <div key={course.code} className="bar-row">
+                    <div className="bar-label">{course.code}</div>
+                    <div className="bar-track">
+                      <div
+                        className="bar-fill"
+                        style={{
+                          width: `${course.percentage}%`,
+                          backgroundColor: colors[index % colors.length]
+                        }}
+                      />
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="bar-value">
+                      {course.count} ({course.percentage}%)
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
           )}
 
           {stats.creditsPerUser && stats.creditsPerUser.length > 0 && (
           <div className="chart-section">
-            <h2>📈 Tín Chỉ Theo Từng Sinh Viên</h2>
-            <div className="bar-chart">
+            <h2>📈 Tín Chỉ Theo Từng Sinh Viên (Top 10)</h2>
+            <div className="bar-chart-list">
+              {(() => {
+                const topUsers = stats.creditsPerUser.slice(0, 10);
+                const maxCredits = Math.max(...topUsers.map(u => u.credits), 1);
+                return topUsers.map((user) => (
+                  <div key={user.email} className="bar-row">
+                    <div className="bar-label">
+                      {user.name} ({user.studentId})
+                    </div>
+                    <div className="bar-track">
+                      <div
+                        className="bar-fill"
+                        style={{ width: `${(user.credits / maxCredits) * 100}%` }}
+                      />
+                    </div>
+                    <div className="bar-value">{user.credits} TC</div>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            <div className="bar-chart-table">
               <table className="credits-table">
                 <thead>
                   <tr>
