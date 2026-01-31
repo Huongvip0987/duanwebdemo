@@ -118,6 +118,7 @@ const Admin = () => {
             </div>
           </div>
 
+          {stats.courseDistribution && stats.courseDistribution.length > 0 && (
           <div className="chart-section">
             <h2>📊 Phân Bổ Đăng Ký Môn Học</h2>
             <div className="pie-chart-container">
@@ -176,6 +177,7 @@ const Admin = () => {
               </div>
             </div>
           </div>
+          )}
         </div>
       )}
 
