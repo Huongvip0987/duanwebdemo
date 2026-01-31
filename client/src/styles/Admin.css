@@ -352,16 +352,33 @@
   background: #ff6b6b;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 10px 18px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   transition: all 0.3s ease;
+  min-height: 44px;
+  min-width: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
 }
 
 .btn-delete:hover {
   background: #fa5252;
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.btn-delete:active {
+  transform: scale(0.98);
+}
+
+.credits-td {
+  text-align: center;
+  font-weight: 700;
 }
 
 table {
@@ -599,9 +616,30 @@ table tr:hover {
     font-size: 1.2rem;
   }
 
+  .users-table th,
+  .users-table td {
+    padding: 8px 6px;
+  }
+
+  .btn-delete {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    min-height: 40px;
+    min-width: 50px;
+  }
+
   .credits-table th,
   .credits-table td {
     padding: 8px;
     font-size: 0.85rem;
+  }
+
+  .credits-cell {
+    font-size: 0.95rem;
+  }
+
+  .enrolled-courses-list {
+    max-height: 100px;
+    font-size: 0.8rem;
   }
 }

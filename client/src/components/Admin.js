@@ -234,48 +234,57 @@ const Admin = () => {
                   <th>Tên</th>
                   <th>Email</th>
                   <th>Vai Trò</th>
-                  <th>Số Môn Đã Đăng Ký</th>
+                  <th>Tín Chỉ</th>
                   <th>Môn Học</th>
                   <th>Hành Động</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
-                  <tr key={user._id}>
-                    <td>{user.studentId}</td>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td>
-                      <span className={`role-badge ${user.role}`}>
-                        {user.role === 'admin' ? 'Quản Trị' : 'Sinh Viên'}
-                      </span>
-                    </td>
-                    <td>{user.enrolledCourses?.length || 0}</td>
-                    <td>
-                      {user.enrolledCourses?.length > 0 ? (
-                        <ul className="enrolled-courses-list">
-                          {user.enrolledCourses.map(course => (
-                            <li key={course._id}>
-                              {course.code} - {course.name} ({course.credits} TC)
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <span className="no-courses">Chưa đăng ký môn nào</span>
-                      )}
-                    </td>
-                    <td>
-                      {user.role !== 'admin' && (
-                        <button 
-                          className="btn-delete"
-                          onClick={() => handleDeleteUser(user._id)}
-                        >
-                          Xóa
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {users.map(user => {
+                  // Calculate total credits for this user
+                  const userCredits = user.enrolledCourses?.reduce((sum, course) => sum + (course.credits || 0), 0) || 0;
+                  
+                  return (
+                    <tr key={user._id}>
+                      <td>{user.studentId}</td>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>
+                        <span className={`role-badge ${user.role}`}>
+                          {user.role === 'admin' ? 'Quản Trị' : 'Sinh Viên'}
+                        </span>
+                      </td>
+                      <td className="credits-td">
+                        <strong style={{fontSize: '1.1rem', color: '#2d7ab8'}}>
+                          {userCredits} TC
+                        </strong>
+                      </td>
+                      <td>
+                        {user.enrolledCourses?.length > 0 ? (
+                          <ul className="enrolled-courses-list">
+                            {user.enrolledCourses.map(course => (
+                              <li key={course._id}>
+                                {course.code} - {course.name} ({course.credits} TC)
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span className="no-courses">Chưa đăng ký môn nào</span>
+                        )}
+                      </td>
+                      <td>
+                        {user.role !== 'admin' && (
+                          <button 
+                            className="btn-delete"
+                            onClick={() => handleDeleteUser(user._id)}
+                          >
+                            Xóa
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
