@@ -108,23 +108,23 @@ const Admin = () => {
           <div className="stat-cards">
             <div className="stat-card">
               <h3>{stats.totalUsers}</h3>
-              <p>Tổng Sinh Viên</p>
+              <p>👥 Tổng Tài Khoản</p>
             </div>
             <div className="stat-card online">
               <h3>{stats.onlineUsers}</h3>
-              <p>Đang Online</p>
-            </div>
-            <div className="stat-card">
-              <h3>{stats.totalCourses}</h3>
-              <p>Tổng Môn Học</p>
+              <p>🟢 Đang Online</p>
             </div>
             <div className="stat-card">
               <h3>{stats.totalEnrollments}</h3>
-              <p>Tổng Đăng Ký</p>
+              <p>📚 Tổng Đăng Ký</p>
+            </div>
+            <div className="stat-card">
+              <h3>{stats.totalCredits}</h3>
+              <p>🎓 Tổng Tín Chỉ</p>
             </div>
             <div className="stat-card">
               <h3>{stats.recentUsers}</h3>
-              <p>Đăng Ký Mới (7 ngày)</p>
+              <p>✨ Mới (7 ngày)</p>
             </div>
           </div>
 
@@ -179,12 +179,44 @@ const Admin = () => {
                         style={{backgroundColor: colors[index % colors.length]}}
                       ></span>
                       <span className="legend-text">
-                        {course.code} - {course.name}: {course.count} ({course.percentage}%)
+                        {course.code}: {course.count} ({course.percentage}%)
                       </span>
                     </div>
                   );
                 })}
               </div>
+            </div>
+          </div>
+          )}
+
+          {stats.creditsPerUser && stats.creditsPerUser.length > 0 && (
+          <div className="chart-section">
+            <h2>📈 Tín Chỉ Theo Từng Sinh Viên</h2>
+            <div className="bar-chart">
+              <table className="credits-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>MSSV</th>
+                    <th>Tên Sinh Viên</th>
+                    <th>Email</th>
+                    <th>Tín Chỉ</th>
+                    <th>Môn Học</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.creditsPerUser.map((user, idx) => (
+                    <tr key={user.email}>
+                      <td>{idx + 1}</td>
+                      <td>{user.studentId}</td>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td className="credits-cell">{user.credits}</td>
+                      <td>{user.enrollments}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
           )}

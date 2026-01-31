@@ -46,8 +46,24 @@ router.get('/stats', authMiddleware, isAdmin, async (req, res) => {
       lastActive: { $gte: fiveMinutesAgo }
     });
     
+    // Get total credits for all students
+    const allUsers = await User.find({ role: 'student' }).populate('enrolledCourses');
+    const totalCreditsData = allUsers.reduce((sum, user) => {
+      const credits = user.enrolledCourses.reduce((c, course) => c + (course.credits || 0), 0);
+      return sum + credits;
+    }, 0);
+    
+    // Get credits per user for bar chart
+    const creditsPerUser = allUsers.map(user => ({
+      name: user.name,
+      email: user.email,
+      studentId: user.studentId,
+      credits: user.enrolledCourses.reduce((c, course) => c + (course.credits || 0), 0),
+      enrollments: user.enrolledCourses.length
+    })).sort((a, b) => b.credits - a.credits);
+    
     // Get course enrollment distribution for pie chart
-    const courses = await Course.find().select('code name enrolledStudents');
+    const courses = await Course.find().select('code name enrolledStudents credits');
     const totalEnrollmentsCount = totalEnrollments[0]?.total || 0;
     
     const courseDistribution = courses.map(c => ({
@@ -76,6 +92,8 @@ router.get('/stats', authMiddleware, isAdmin, async (req, res) => {
       totalCourses,
       totalEnrollments: totalEnrollments[0]?.total || 0,
       onlineUsers,
+      totalCredits: totalCreditsData,
+      creditsPerUser,
       courseDistribution,
       recentUsers,
       registrationEnabled
