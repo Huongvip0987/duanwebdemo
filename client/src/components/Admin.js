@@ -26,15 +26,19 @@ const Admin = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       const [statsRes, usersRes] = await Promise.all([
-        axios.get('/api/admin/stats'),
-        axios.get('/api/admin/users')
+        axios.get('/api/admin/stats', { headers }),
+        axios.get('/api/admin/users', { headers })
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
       setRegistrationEnabled(statsRes.data.registrationEnabled);
       setLoading(false);
     } catch (err) {
+      console.error('Fetch error:', err);
       setError(err.response?.data?.message || 'Error loading data');
       setLoading(false);
     }
@@ -44,7 +48,10 @@ const Admin = () => {
     if (!window.confirm('Bạn có chắc muốn xóa người dùng này?')) return;
 
     try {
-      await axios.delete(`/api/admin/users/${userId}`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      await axios.delete(`/api/admin/users/${userId}`, { headers });
       alert('Xóa người dùng thành công');
       fetchData();
     } catch (err) {
@@ -55,9 +62,12 @@ const Admin = () => {
   const handleToggleRegistration = async () => {
     try {
       const newStatus = !registrationEnabled;
-      await axios.post('/api/admin/toggle-registration', { enabled: newStatus });
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      await axios.post('/api/admin/toggle-registration', { enabled: newStatus }, { headers });
       setRegistrationEnabled(newStatus);
-      alert(newStatus ? 'Đã bật đăng ký' : 'Đã tắt đăng ký');
+      alert(newStatus ? '✅ Đã bật đăng ký' : '🚫 Đã tắt đăng ký');
     } catch (err) {
       alert(err.response?.data?.message || 'Error toggling registration');
     }
