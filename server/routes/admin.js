@@ -18,13 +18,39 @@ router.get('/users', authMiddleware, isAdmin, async (req, res) => {
   try {
     const users = await User.find()
       .select('-password')
-      .populate('enrolledCourses', 'code name credits')
+      .lean()
       .sort({ createdAt: -1 });
+    
+    if (!users) {
+      return res.json([]);
+    }
+    
+    // Manually populate enrolledCourses to avoid errors
+    const Course = require('../models/Course');
+    for (let user of users) {
+      // Initialize enrolledCourses if it doesn't exist
+      if (!user.enrolledCourses) {
+        user.enrolledCourses = [];
+      }
+      
+      if (Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0) {
+        try {
+          user.enrolledCourses = await Course.find({
+            _id: { $in: user.enrolledCourses }
+          }).select('code name credits').lean();
+        } catch (err) {
+          console.error('Error populating courses for user:', user.email, err);
+          user.enrolledCourses = [];
+        }
+      } else {
+        user.enrolledCourses = [];
+      }
+    }
     
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message, stack: error.stack });
   }
 });
 
