@@ -19,7 +19,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Database connection
 let dbReady = false;
-mongoose.connect(process.env.MONGODB_URI, {
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/course-registration';
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
