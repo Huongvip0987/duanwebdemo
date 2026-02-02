@@ -8,10 +8,7 @@ RUN npm install
 
 COPY . .
 
-ARG REACT_APP_API_URL=http://backend:5000
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
-
-RUN npm run build
+RUN REACT_APP_API_URL=http://192.168.1.4:5000 npm run build
 
 FROM node:18-alpine
 
