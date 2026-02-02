@@ -9,7 +9,7 @@ const Admin = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'users', 'courses'
+  const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'users'
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
@@ -146,105 +146,40 @@ const Admin = () => {
           </div>
 
           {stats.courseStats && stats.courseStats.length > 0 && (
-          <div className="chart-section">
-            <h2>📊 Tỉ Lệ Đăng Ký Môn Học</h2>
-            <table className="course-table">
-              <thead>
-                <tr>
-                  <th>Mã Môn</th>
-                  <th>Tên Môn</th>
-                  <th>Số SV Đăng Ký</th>
-                  <th>Tối Đa</th>
-                  <th>Tỉ Lệ %</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.courseStats.map((course) => (
-                  <tr key={course.id}>
-                    <td><strong>{course.code}</strong></td>
-                    <td>{course.name}</td>
-                    <td>{course.enrolled}</td>
-                    <td>{course.maxStudents}</td>
-                    <td>
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill" 
-                          style={{width: `${course.percentage}%`}}
-                        >
-                          {course.percentage}%
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-                          width: `${course.percentage}%`,
-                          backgroundColor: colors[index % colors.length]
-                        }}
-                      />
-                    </div>
-                    <div className="bar-value">
-                      {course.count} ({course.percentage}%)
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          )}
-
-          {stats.creditsPerUser && stats.creditsPerUser.length > 0 && (
-          <div className="chart-section">
-            <h2>📈 Tín Chỉ Theo Từng Sinh Viên (Top 10)</h2>
-            <div className="bar-chart-list">
-              {(() => {
-                const topUsers = stats.creditsPerUser.slice(0, 10);
-                const maxCredits = Math.max(...topUsers.map(u => u.credits), 1);
-                return topUsers.map((user) => (
-                  <div key={user.email} className="bar-row">
-                    <div className="bar-label">
-                      {user.name} ({user.studentId})
-                    </div>
-                    <div className="bar-track">
-                      <div
-                        className="bar-fill"
-                        style={{ width: `${(user.credits / maxCredits) * 100}%` }}
-                      />
-                    </div>
-                    <div className="bar-value">{user.credits} TC</div>
-                  </div>
-                ));
-              })()}
-            </div>
-
-            <div className="bar-chart-table">
-              <table className="credits-table">
+            <div className="chart-section">
+              <h2>📊 Tỉ Lệ Đăng Ký Môn Học</h2>
+              <table className="course-table">
                 <thead>
                   <tr>
-                    <th>STT</th>
-                    <th>MSSV</th>
-                    <th>Tên Sinh Viên</th>
-                    <th>Email</th>
-                    <th>Tín Chỉ</th>
-                    <th>Môn Học</th>
+                    <th>Mã Môn</th>
+                    <th>Tên Môn</th>
+                    <th>Số SV Đăng Ký</th>
+                    <th>Tối Đa</th>
+                    <th>Tỉ Lệ %</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {stats.creditsPerUser.map((user, idx) => (
-                    <tr key={user.email}>
-                      <td>{idx + 1}</td>
-                      <td>{user.studentId}</td>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td className="credits-cell">{user.credits}</td>
-                      <td>{user.enrollments}</td>
+                  {stats.courseStats.map((course) => (
+                    <tr key={course.id}>
+                      <td><strong>{course.code}</strong></td>
+                      <td>{course.name}</td>
+                      <td>{course.enrolled}</td>
+                      <td>{course.maxStudents}</td>
+                      <td>
+                        <div className="progress-bar">
+                          <div 
+                            className="progress-fill" 
+                            style={{width: `${course.percentage}%`}}
+                          >
+                            {course.percentage}%
+                          </div>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
           )}
         </div>
       )}
@@ -267,7 +202,6 @@ const Admin = () => {
               </thead>
               <tbody>
                 {users.map(user => {
-                  // Calculate total credits for this user
                   const userCredits = user.enrolledCourses?.reduce((sum, course) => sum + (course.credits || 0), 0) || 0;
                   
                   return (
