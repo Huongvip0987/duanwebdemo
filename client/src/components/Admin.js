@@ -14,7 +14,15 @@ const Admin = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    let user = null;
+    try {
+      const rawUser = localStorage.getItem('user');
+      if (rawUser && rawUser !== 'undefined') {
+        user = JSON.parse(rawUser);
+      }
+    } catch (parseError) {
+      user = null;
+    }
     if (!user || user.role !== 'admin') {
       alert('Access denied. Admin only.');
       navigate('/');
@@ -41,6 +49,9 @@ const Admin = () => {
         axios.get('/api/admin/users', { headers })
       ]);
       setStats(statsRes.data);
+      if (typeof statsRes.data?.registrationEnabled === 'boolean') {
+        setRegistrationEnabled(statsRes.data.registrationEnabled);
+      }
       setUsers(usersRes.data);
       setLastUpdated(new Date());
       if (!silent) setLoading(false);

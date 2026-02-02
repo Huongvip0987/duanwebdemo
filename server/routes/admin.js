@@ -233,6 +233,8 @@ router.get('/stats', authMiddleware, isAdmin, async (req, res) => {
     const adminCount = await User.countDocuments({ role: 'admin' });
     const studentCount = await User.countDocuments({ role: 'student' });
     const totalCourses = await Course.countDocuments();
+    const registrationSetting = await Settings.findOne({ key: 'registrationEnabled' }).lean();
+    const registrationEnabled = registrationSetting?.value !== false;
     
     // Get enrollment statistics
     const users = await User.find().select('enrolledCourses');
@@ -267,6 +269,7 @@ router.get('/stats', authMiddleware, isAdmin, async (req, res) => {
       totalCourses,
       totalEnrollments,
       courseStats,
+      registrationEnabled,
       timestamp: new Date()
     });
   } catch (error) {
