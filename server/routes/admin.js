@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Settings = require('../models/Settings');
+const bcrypt = require('bcryptjs');
 const { authMiddleware } = require('../middleware/auth');
 
 // Middleware to check if user is admin
@@ -154,6 +155,30 @@ router.delete('/users/:id', authMiddleware, isAdmin, async (req, res) => {
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reset user password (admin only)
+router.post('/users/:id/reset-password', authMiddleware, isAdmin, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Mật khẩu mới tối thiểu 6 ký tự' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: 'Đặt lại mật khẩu thành công' });
+  } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

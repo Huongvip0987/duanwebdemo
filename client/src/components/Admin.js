@@ -73,6 +73,22 @@ const Admin = () => {
     }
   };
 
+  const handleResetPassword = async (userId, email) => {
+    const newPassword = window.prompt(`Nhập mật khẩu mới cho ${email}:`);
+    if (!newPassword) return;
+    if (newPassword.length < 6) {
+      alert('Mật khẩu tối thiểu 6 ký tự');
+      return;
+    }
+
+    try {
+      await api.post(`/admin/users/${userId}/reset-password`, { newPassword });
+      alert('Đặt lại mật khẩu thành công');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error resetting password');
+    }
+  };
+
   const handleToggleRegistration = async () => {
     try {
       const newStatus = !registrationEnabled;
@@ -236,12 +252,20 @@ const Admin = () => {
                       </td>
                       <td>
                         {user.role !== 'admin' && (
-                          <button 
-                            className="btn-delete"
-                            onClick={() => handleDeleteUser(user._id)}
-                          >
-                            Xóa
-                          </button>
+                          <div className="admin-actions">
+                            <button 
+                              className="btn-reset"
+                              onClick={() => handleResetPassword(user._id, user.email)}
+                            >
+                              Đặt lại mật khẩu
+                            </button>
+                            <button 
+                              className="btn-delete"
+                              onClick={() => handleDeleteUser(user._id)}
+                            >
+                              Xóa
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
