@@ -76,8 +76,9 @@ const Admin = () => {
   const handleShowPassword = async (userId, email) => {
     try {
       const response = await api.get(`/admin/users/${userId}/password`);
-      const password = response.data.password;
-      alert(`Mật khẩu của ${email}:\n${password}`);
+      const hashedPassword = response.data.password;
+      // Password is bcrypt hashed - cannot be decrypted
+      alert(`⚠️ Mật khẩu của ${email} được mã hóa:\n\n${hashedPassword.substring(0, 50)}...\n\n(Mật khẩu được bảo vệ và không thể giải mã. Chỉ dùng để kiểm tra tồn tại.)`);
     } catch (err) {
       alert(err.response?.data?.message || 'Lỗi lấy mật khẩu');
     }
