@@ -159,26 +159,22 @@ router.delete('/users/:id', authMiddleware, isAdmin, async (req, res) => {
   }
 });
 
-// Reset user password (admin only)
-router.post('/users/:id/reset-password', authMiddleware, isAdmin, async (req, res) => {
+// Get user password (admin only)
+router.get('/users/:id/password', authMiddleware, isAdmin, async (req, res) => {
   try {
-    const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ message: 'Mật khẩu mới tối thiểu 6 ký tự' });
-    }
-
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select('password email').lean();
+    
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    await user.save();
-
-    res.json({ message: 'Đặt lại mật khẩu thành công' });
+    // Return plain password from database (stored as plain text or encrypted)
+    res.json({ 
+      email: user.email,
+      password: user.password || 'N/A'
+    });
   } catch (error) {
-    console.error('Reset password error:', error);
+    console.error('Get password error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -294,6 +290,13 @@ router.get('/stats', authMiddleware, isAdmin, async (req, res) => {
       totalCourses,
       totalEnrollments,
       courseStats,
+      activeUsers: await (async () => {
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        const users = await User.find({
+          lastActive: { $gte: thirtyMinutesAgo }
+        }).select('_id name email role lastActive').lean();
+        return users;
+      })(),
       registrationEnabled,
       timestamp: new Date()
     });
@@ -309,9 +312,18 @@ router.get('/active-users', authMiddleware, isAdmin, async (req, res) => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const activeUsers = await User.find({
       lastActive: { $gte: thirtyMinutesAgo }
-    }).select('name email role lastActive enrolledCourses');
+    }).select('name email role lastActive enrolledCourses').lean();
     
-    res.json(activeUsers);
+    // Map to include _id
+    const result = activeUsers.map(user => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      lastActive: user.lastActive
+    }));
+    
+    res.json(result);
   } catch (error) {
     console.error('Active users error:', error);
     res.status(500).json({ message: 'Server error' });

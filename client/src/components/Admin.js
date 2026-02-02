@@ -73,19 +73,13 @@ const Admin = () => {
     }
   };
 
-  const handleResetPassword = async (userId, email) => {
-    const newPassword = window.prompt(`Nhập mật khẩu mới cho ${email}:`);
-    if (!newPassword) return;
-    if (newPassword.length < 6) {
-      alert('Mật khẩu tối thiểu 6 ký tự');
-      return;
-    }
-
+  const handleShowPassword = async (userId, email) => {
     try {
-      await api.post(`/admin/users/${userId}/reset-password`, { newPassword });
-      alert('Đặt lại mật khẩu thành công');
+      const response = await api.get(`/admin/users/${userId}/password`);
+      const password = response.data.password;
+      alert(`Mật khẩu của ${email}:\n${password}`);
     } catch (err) {
-      alert(err.response?.data?.message || 'Error resetting password');
+      alert(err.response?.data?.message || 'Lỗi lấy mật khẩu');
     }
   };
 
@@ -135,6 +129,12 @@ const Admin = () => {
           onClick={() => setActiveTab('users')}
         >
           Quản Lý Người Dùng
+        </button>
+        <button 
+          className={activeTab === 'active' ? 'active' : ''} 
+          onClick={() => setActiveTab('active')}
+        >
+          Tài Khoản Hoạt Động
         </button>
       </div>
 
@@ -254,10 +254,10 @@ const Admin = () => {
                         {user.role !== 'admin' && (
                           <div className="admin-actions">
                             <button 
-                              className="btn-reset"
-                              onClick={() => handleResetPassword(user._id, user.email)}
+                              className="btn-view"
+                              onClick={() => handleShowPassword(user._id, user.email)}
                             >
-                              Đặt lại mật khẩu
+                              Xem MK
                             </button>
                             <button 
                               className="btn-delete"
@@ -274,6 +274,33 @@ const Admin = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'active' && stats && (
+        <div className="active-section">
+          <h2>👥 Tài Khoản Đang Hoạt Động ({stats.activeUsers?.length || 0})</h2>
+          {stats.activeUsers && stats.activeUsers.length > 0 ? (
+            <div className="active-users-grid">
+              {stats.activeUsers.map(user => (
+                <div key={user._id} className="active-user-card">
+                  <div className="user-status-indicator"></div>
+                  <div className="user-info">
+                    <div className="user-name">{user.name}</div>
+                    <div className="user-email">{user.email}</div>
+                    <div className="user-role">{user.role === 'admin' ? '👨‍💼 Admin' : '🎓 Sinh Viên'}</div>
+                    {user.lastActive && (
+                      <div className="user-last-active">
+                        Hoạt động: {new Date(user.lastActive).toLocaleTimeString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-active-users">Không có tài khoản nào đang hoạt động</p>
+          )}
         </div>
       )}
     </div>

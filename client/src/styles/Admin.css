@@ -215,10 +215,10 @@
   flex-wrap: wrap;
 }
 
-.btn-reset {
+.btn-view {
   padding: 8px 12px;
-  background: #f1c40f;
-  color: #2c3e50;
+  background: #3498db;
+  color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -227,8 +227,8 @@
   transition: all 0.3s;
 }
 
-.btn-reset:hover {
-  background: #d4ac0d;
+.btn-view:hover {
+  background: #2980b9;
   transform: scale(1.05);
 }
   background: #e9ecef;
@@ -749,4 +749,105 @@ table tr:hover {
     max-height: 100px;
     font-size: 0.8rem;
   }
+}
+/* Active Users Section */
+.active-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.active-section h2 {
+  color: #2d7ab8;
+  font-size: 22px;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.active-users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.active-user-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s;
+}
+
+.active-user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.user-status-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 12px;
+  height: 12px;
+  background: #2ecc71;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+  }
+}
+
+.user-info {
+  position: relative;
+  z-index: 1;
+}
+
+.user-name {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.user-email {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.user-role {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.user-last-active {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-top: 10px;
+}
+
+.no-active-users {
+  text-align: center;
+  color: #999;
+  padding: 40px;
+  font-size: 16px;
 }
