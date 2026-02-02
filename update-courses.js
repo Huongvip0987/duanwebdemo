@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Course = require('./server/models/Course');
+const Course = require('./models/Course');
 require('dotenv').config();
 
 const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/course-registration';
