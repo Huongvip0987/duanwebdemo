@@ -7,9 +7,9 @@ const Admin = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const [activeUsers, setActiveUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('stats'); // 'stats', 'users'
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
@@ -31,9 +31,10 @@ const Admin = () => {
 
     fetchData();
 
+    // Change polling interval from 10s to 5s
     const intervalId = setInterval(() => {
       fetchData(true);
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(intervalId);
   }, [navigate]);
@@ -41,15 +42,19 @@ const Admin = () => {
   const fetchData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [statsRes, usersRes] = await Promise.all([
+      // Fetch all three data sources together
+      const [statsRes, usersRes, activeUsersRes] = await Promise.all([
         api.get('/admin/stats'),
-        api.get('/admin/users')
+        api.get('/admin/users'),
+        api.get('/admin/active-users')
       ]);
+      
       setStats(statsRes.data);
       if (typeof statsRes.data?.registrationEnabled === 'boolean') {
         setRegistrationEnabled(statsRes.data.registrationEnabled);
       }
       setUsers(usersRes.data);
+      setActiveUsers(activeUsersRes.data);
       setLastUpdated(new Date());
       if (!silent) setLoading(false);
     } catch (err) {
@@ -73,17 +78,6 @@ const Admin = () => {
     }
   };
 
-  const handleShowPassword = async (userId, email) => {
-    try {
-      const response = await api.get(`/admin/users/${userId}/password`);
-      const hashedPassword = response.data.password;
-      // Password is bcrypt hashed - cannot be decrypted
-      alert(`⚠️ Mật khẩu của ${email} được mã hóa:\n\n${hashedPassword.substring(0, 50)}...\n\n(Mật khẩu được bảo vệ và không thể giải mã. Chỉ dùng để kiểm tra tồn tại.)`);
-    } catch (err) {
-      alert(err.response?.data?.message || 'Lỗi lấy mật khẩu');
-    }
-  };
-
   const handleToggleRegistration = async () => {
     try {
       const newStatus = !registrationEnabled;
@@ -101,12 +95,13 @@ const Admin = () => {
 
   return (
     <div className="admin-container">
+      {/* Header with toggle button */}
       <div className="admin-header">
         <div>
           <h1>🎓 Admin Dashboard</h1>
           {lastUpdated && (
             <div className="last-updated">
-              🔄 Cập nhật: {lastUpdated.toLocaleTimeString()}
+              🔄 Cập nhật: {lastUpdated.toLocaleTimeString()} ({Math.round((new Date() - lastUpdated) / 1000)}s)
             </div>
           )}
         </div>
@@ -118,29 +113,10 @@ const Admin = () => {
         </button>
       </div>
 
-      <div className="admin-tabs">
-        <button 
-          className={activeTab === 'stats' ? 'active' : ''} 
-          onClick={() => setActiveTab('stats')}
-        >
-          Thống Kê
-        </button>
-        <button 
-          className={activeTab === 'users' ? 'active' : ''} 
-          onClick={() => setActiveTab('users')}
-        >
-          Quản Lý Người Dùng
-        </button>
-        <button 
-          className={activeTab === 'active' ? 'active' : ''} 
-          onClick={() => setActiveTab('active')}
-        >
-          Tài Khoản Hoạt Động
-        </button>
-      </div>
-
-      {activeTab === 'stats' && stats && (
-        <div className="stats-section">
+      {/* Statistics Section */}
+      {stats && (
+        <div className="unified-section">
+          <div className="section-title">📊 Thống Kê Hệ Thống</div>
           <div className="stat-cards">
             <div className="stat-card">
               <h3>{stats.totalUsers}</h3>
@@ -166,7 +142,7 @@ const Admin = () => {
 
           {stats.courseStats && stats.courseStats.length > 0 && (
             <div className="chart-section">
-              <h2>📊 Tỉ Lệ Đăng Ký Môn Học</h2>
+              <h2>📈 Tỉ Lệ Đăng Ký Môn Học</h2>
               <table className="course-table">
                 <thead>
                   <tr>
@@ -203,107 +179,99 @@ const Admin = () => {
         </div>
       )}
 
-      {activeTab === 'users' && (
-        <div className="users-section">
-          <h2>Danh Sách Người Dùng ({users.length})</h2>
-          <div className="users-table-container">
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>MSSV</th>
-                  <th>Tên</th>
-                  <th>Email</th>
-                  <th>Vai Trò</th>
-                  <th>Tín Chỉ</th>
-                  <th>Môn Học</th>
-                  <th>Hành Động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(user => {
-                  const userCredits = user.enrolledCourses?.reduce((sum, course) => sum + (course.credits || 0), 0) || 0;
-                  
-                  return (
-                    <tr key={user._id}>
-                      <td>{user.studentId}</td>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <span className={`role-badge ${user.role}`}>
-                          {user.role === 'admin' ? 'Quản Trị' : 'Sinh Viên'}
-                        </span>
-                      </td>
-                      <td className="credits-td">
-                        <strong style={{fontSize: '1.1rem', color: '#2d7ab8'}}>
-                          {userCredits} TC
-                        </strong>
-                      </td>
-                      <td>
-                        {user.enrolledCourses?.length > 0 ? (
-                          <ul className="enrolled-courses-list">
-                            {user.enrolledCourses.map(course => (
-                              <li key={course._id}>
-                                {course.code} - {course.name} ({course.credits} TC)
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span className="no-courses">Chưa đăng ký môn nào</span>
-                        )}
-                      </td>
-                      <td>
-                        {user.role !== 'admin' && (
-                          <div className="admin-actions">
-                            <button 
-                              className="btn-view"
-                              onClick={() => handleShowPassword(user._id, user.email)}
-                            >
-                              Xem MK
-                            </button>
-                            <button 
-                              className="btn-delete"
-                              onClick={() => handleDeleteUser(user._id)}
-                            >
-                              Xóa
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'active' && stats && (
-        <div className="active-section">
-          <h2>👥 Tài Khoản Đang Hoạt Động ({stats.activeUsers?.length || 0})</h2>
-          {stats.activeUsers && stats.activeUsers.length > 0 ? (
-            <div className="active-users-grid">
-              {stats.activeUsers.map(user => (
-                <div key={user._id} className="active-user-card">
-                  <div className="user-status-indicator"></div>
-                  <div className="user-info">
-                    <div className="user-name">{user.name}</div>
-                    <div className="user-email">{user.email}</div>
-                    <div className="user-role">{user.role === 'admin' ? '👨‍💼 Admin' : '🎓 Sinh Viên'}</div>
-                    {user.lastActive && (
-                      <div className="user-last-active">
-                        Hoạt động: {new Date(user.lastActive).toLocaleTimeString()}
-                      </div>
-                    )}
-                  </div>
+      {/* Active Users Section - Real-time updates */}
+      <div className="unified-section active-users-section">
+        <h2>👥 Tài Khoản Đang Hoạt Động ({activeUsers.length})</h2>
+        {activeUsers && activeUsers.length > 0 ? (
+          <div className="active-users-grid">
+            {activeUsers.map(user => (
+              <div key={user._id} className="active-user-card">
+                <div className="user-status-indicator"></div>
+                <div className="user-info">
+                  <div className="user-name">{user.name}</div>
+                  <div className="user-email">{user.email}</div>
+                  <div className="user-role">{user.role === 'admin' ? '👨‍💼 Admin' : '🎓 Sinh Viên'}</div>
+                  {user.lastActive && (
+                    <div className="user-last-active">
+                      Hoạt động: {new Date(user.lastActive).toLocaleTimeString()}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="no-active-users">Không có tài khoản nào đang hoạt động</p>
-          )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="no-active-users">Không có tài khoản nào đang hoạt động</p>
+        )}
+      </div>
+
+      {/* Users Management Section */}
+      <div className="unified-section users-section">
+        <h2>👨‍💼 Danh Sách Người Dùng ({users.length})</h2>
+        <div className="users-table-container">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>MSSV</th>
+                <th>Tên</th>
+                <th>Email</th>
+                <th>Vai Trò</th>
+                <th>Tín Chỉ</th>
+                <th>Môn Học</th>
+                <th>Hành Động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(user => {
+                const userCredits = user.enrolledCourses?.reduce((sum, course) => sum + (course.credits || 0), 0) || 0;
+                
+                return (
+                  <tr key={user._id}>
+                    <td>{user.studentId}</td>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <span className={`role-badge ${user.role}`}>
+                        {user.role === 'admin' ? 'Quản Trị' : 'Sinh Viên'}
+                      </span>
+                    </td>
+                    <td className="credits-td">
+                      <strong style={{fontSize: '1.1rem', color: '#2d7ab8'}}>
+                        {userCredits} TC
+                      </strong>
+                    </td>
+                    <td>
+                      {user.enrolledCourses?.length > 0 ? (
+                        <ul className="enrolled-courses-list">
+                          {user.enrolledCourses.map(course => (
+                            <li key={course._id}>
+                              {course.code} - {course.name} ({course.credits} TC)
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="no-courses">Chưa đăng ký môn nào</span>
+                      )}
+                    </td>
+                    <td>
+                      {user.role !== 'admin' && (
+                        <div className="admin-actions">
+                          <button 
+                            className="btn-delete"
+                            onClick={() => handleDeleteUser(user._id)}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </div>
   );
 };

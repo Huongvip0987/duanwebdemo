@@ -60,44 +60,33 @@
   transform: scale(1.05);
 }
 
-.admin-tabs {
-  display: flex;
-  gap: 0;
-  margin-bottom: 30px;
+/* Unified Section Styles */
+.unified-section {
+  animation: fadeIn 0.5s ease;
   background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
 }
 
-.admin-tabs button {
-  padding: 14px 20px;
-  border: none;
-  background: #f8f9fa;
-  color: #666;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  flex: 1;
-  text-align: center;
+.section-title {
+  color: #2d7ab8;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #e0e0e0;
 }
 
-.admin-tabs button:hover {
-  background: #e8e8e8;
-}
-
-.admin-tabs button.active {
-  background: #2d7ab8;
-  color: white;
-  font-weight: 600;
+.stats-section,
+.active-users-section,
+.users-section {
+  /* Keep existing styles but remove individual borders/backgrounds */
 }
 
 /* Stats Section */
 .stats-section {
-  animation: fadeIn 0.5s ease;
-  background: white;
-  padding: 30px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -356,13 +345,6 @@
   animation: fadeIn 0.5s ease;
 }
 
-.users-section {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
 .users-section h2 {
   color: #2d7ab8;
   font-size: 22px;
@@ -584,18 +566,6 @@ table tr:hover {
 
   .stat-card h3 {
     font-size: 2rem;
-  }
-
-  .admin-tabs {
-    overflow-x: auto;
-    gap: 5px;
-    padding-bottom: 5px;
-  }
-
-  .admin-tabs button {
-    padding: 10px 16px;
-    font-size: 0.9rem;
-    white-space: nowrap;
   }
 
   .chart-section {

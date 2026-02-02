@@ -159,26 +159,6 @@ router.delete('/users/:id', authMiddleware, isAdmin, async (req, res) => {
   }
 });
 
-// Get user password (admin only)
-router.get('/users/:id/password', authMiddleware, isAdmin, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select('password email').lean();
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Return plain password from database (stored as plain text or encrypted)
-    res.json({ 
-      email: user.email,
-      password: user.password || 'N/A'
-    });
-  } catch (error) {
-    console.error('Get password error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // Create/Update course (admin only)
 router.post('/courses', authMiddleware, isAdmin, async (req, res) => {
   try {
