@@ -226,4 +226,68 @@ router.post('/toggle-registration', authMiddleware, isAdmin, async (req, res) =>
   }
 });
 
+// Get dashboard statistics
+router.get('/stats', authMiddleware, isAdmin, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    const studentCount = await User.countDocuments({ role: 'student' });
+    const totalCourses = await Course.countDocuments();
+    
+    // Get enrollment statistics
+    const users = await User.find().select('enrolledCourses');
+    const courseEnrollmentMap = {};
+    
+    let totalEnrollments = 0;
+    for (let user of users) {
+      if (Array.isArray(user.enrolledCourses)) {
+        for (let courseId of user.enrolledCourses) {
+          totalEnrollments++;
+          const courseIdStr = courseId.toString();
+          courseEnrollmentMap[courseIdStr] = (courseEnrollmentMap[courseIdStr] || 0) + 1;
+        }
+      }
+    }
+    
+    // Get course details with enrollment count
+    const courses = await Course.find().select('code name maxStudents');
+    const courseStats = courses.map(course => ({
+      id: course._id,
+      code: course.code,
+      name: course.name,
+      enrolled: courseEnrollmentMap[course._id.toString()] || 0,
+      maxStudents: course.maxStudents,
+      percentage: course.maxStudents > 0 ? Math.round((courseEnrollmentMap[course._id.toString()] || 0) / course.maxStudents * 100) : 0
+    }));
+    
+    res.json({
+      totalUsers,
+      adminCount,
+      studentCount,
+      totalCourses,
+      totalEnrollments,
+      courseStats,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('Stats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get active users (logged in recently - last 30 minutes)
+router.get('/active-users', authMiddleware, isAdmin, async (req, res) => {
+  try {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const activeUsers = await User.find({
+      lastActive: { $gte: thirtyMinutesAgo }
+    }).select('name email role lastActive enrolledCourses');
+    
+    res.json(activeUsers);
+  } catch (error) {
+    console.error('Active users error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

@@ -42,7 +42,6 @@ const Admin = () => {
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
-      setRegistrationEnabled(statsRes.data.registrationEnabled);
       setLastUpdated(new Date());
       if (!silent) setLoading(false);
     } catch (err) {
@@ -128,37 +127,58 @@ const Admin = () => {
               <h3>{stats.totalUsers}</h3>
               <p>👥 Tổng Tài Khoản</p>
             </div>
-            <div className="stat-card online">
-              <h3>{stats.onlineUsers}</h3>
-              <p>🟢 Đang Online</p>
+            <div className="stat-card">
+              <h3>{stats.studentCount}</h3>
+              <p>🎓 Sinh Viên</p>
+            </div>
+            <div className="stat-card">
+              <h3>{stats.adminCount}</h3>
+              <p>👨‍💼 Admin</p>
+            </div>
+            <div className="stat-card">
+              <h3>{stats.totalCourses}</h3>
+              <p>📚 Tổng Môn Học</p>
             </div>
             <div className="stat-card">
               <h3>{stats.totalEnrollments}</h3>
-              <p>📚 Tổng Đăng Ký</p>
-            </div>
-            <div className="stat-card">
-              <h3>{stats.totalCredits}</h3>
-              <p>🎓 Tổng Tín Chỉ</p>
-            </div>
-            <div className="stat-card">
-              <h3>{stats.recentUsers}</h3>
-              <p>✨ Mới (7 ngày)</p>
+              <p>✏️ Tổng Đăng Ký</p>
             </div>
           </div>
 
-          {stats.courseDistribution && stats.courseDistribution.length > 0 && (
+          {stats.courseStats && stats.courseStats.length > 0 && (
           <div className="chart-section">
-            <h2>📊 Phân Bổ Đăng Ký Môn Học</h2>
-            <div className="bar-chart-list">
-              {stats.courseDistribution.map((course, index) => {
-                const colors = ['#4299e1', '#48bb78', '#ed8936', '#9f7aea', '#f56565'];
-                return (
-                  <div key={course.code} className="bar-row">
-                    <div className="bar-label">{course.code}</div>
-                    <div className="bar-track">
-                      <div
-                        className="bar-fill"
-                        style={{
+            <h2>📊 Tỉ Lệ Đăng Ký Môn Học</h2>
+            <table className="course-table">
+              <thead>
+                <tr>
+                  <th>Mã Môn</th>
+                  <th>Tên Môn</th>
+                  <th>Số SV Đăng Ký</th>
+                  <th>Tối Đa</th>
+                  <th>Tỉ Lệ %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.courseStats.map((course) => (
+                  <tr key={course.id}>
+                    <td><strong>{course.code}</strong></td>
+                    <td>{course.name}</td>
+                    <td>{course.enrolled}</td>
+                    <td>{course.maxStudents}</td>
+                    <td>
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{width: `${course.percentage}%`}}
+                        >
+                          {course.percentage}%
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
                           width: `${course.percentage}%`,
                           backgroundColor: colors[index % colors.length]
                         }}
