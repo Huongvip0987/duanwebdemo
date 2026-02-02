@@ -18,8 +18,12 @@ function App() {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
+    if (token && savedUser && savedUser !== 'undefined') {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Failed to parse user:', e);
+      }
     }
     setLoading(false);
   }, []);
