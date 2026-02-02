@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import '../styles/Admin.css';
 
 const Admin = () => {
@@ -41,12 +41,9 @@ const Admin = () => {
   const fetchData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
       const [statsRes, usersRes] = await Promise.all([
-        axios.get('/api/admin/stats', { headers }),
-        axios.get('/api/admin/users', { headers })
+        api.get('/admin/stats'),
+        api.get('/admin/users')
       ]);
       setStats(statsRes.data);
       if (typeof statsRes.data?.registrationEnabled === 'boolean') {
@@ -68,10 +65,7 @@ const Admin = () => {
     if (!window.confirm('Bạn có chắc muốn xóa người dùng này?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      await axios.delete(`/api/admin/users/${userId}`, { headers });
+      await api.delete(`/admin/users/${userId}`);
       alert('Xóa người dùng thành công');
       fetchData();
     } catch (err) {
@@ -82,10 +76,7 @@ const Admin = () => {
   const handleToggleRegistration = async () => {
     try {
       const newStatus = !registrationEnabled;
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      await axios.post('/api/admin/toggle-registration', { enabled: newStatus }, { headers });
+      await api.post('/admin/toggle-registration', { enabled: newStatus });
       setRegistrationEnabled(newStatus);
       alert(newStatus ? '✅ Đã bật đăng ký' : '🚫 Đã tắt đăng ký');
       fetchData(true);
