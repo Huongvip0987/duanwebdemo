@@ -136,4 +136,20 @@ router.get('/me', require('../middleware/auth').authMiddleware, async (req, res)
   }
 });
 
+// @route   POST /api/auth/logout
+// @desc    Logout user (set lastActive to old date)
+// @access  Private
+router.post('/logout', require('../middleware/auth').authMiddleware, async (req, res) => {
+  try {
+    // Set lastActive to 2 hours ago so user disappears from active list
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    await User.findByIdAndUpdate(req.user._id, { lastActive: twoHoursAgo });
+    
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ message: 'Server error during logout' });
+  }
+});
+
 module.exports = router;

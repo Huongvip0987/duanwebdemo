@@ -8,6 +8,7 @@ import Courses from './components/Courses';
 import MyCourses from './components/MyCourses';
 import Profile from './components/Profile';
 import Admin from './components/Admin';
+import api from './services/api';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -34,7 +35,15 @@ function App() {
     setUser(userData);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to update lastActive on server
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Continue with logout even if API call fails
+    }
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
